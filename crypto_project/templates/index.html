@@ -1,0 +1,292 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Let'sTalk</title>
+  <link rel="stylesheet" href="../static/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <script type="text/javascript">
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    var username = prompt("Please enter your name:");
+    var room = prompt("Please enter your room:");
+    let keyword;
+    if (username === "" || room === "")
+    {
+      alert("Please enter valid credentials.");
+    }
+    else
+    {
+      socket.emit('join', { 'username': username, 'room': room });
+    }
+    function showAlertBox() {
+      document.getElementById("alert-box").style.display = "block";
+    }
+
+    function closeAlertBox() {
+      document.getElementById("alert-box").style.display = "none";
+    }
+
+    window.onload = function () {
+      showAlertBox();
+    };
+
+
+
+    socket.on('join_room', function (data) {
+      keyword = data.keyword
+      username = username.charAt(0).toUpperCase() + username.slice(1);
+      document.getElementById("userhead").innerHTML = username
+      $('#connection').append($('<p class="text-center">').text(data.username + ' joined the room ' + data.room));
+      $('#message').val('').focus();
+    });
+
+    socket.on('leave_room', function (data) {
+      $('#connection').append($('<p class="text-center">').text(data.username + ' left the room ' + data.room));
+    });
+
+    const testList = [];
+    for (let i = 65; i <= 90; i++) {
+      testList.push(String.fromCharCode(i));
+    }
+    for (let i = 97; i <= 122; i++) {
+      testList.push(String.fromCharCode(i));
+    }
+
+    function generateKey(string, key) {
+      key = key.split("");
+      if (string.length == key.length) {
+        return key;
+      } else if (string.length < key.length) {
+        key = key.slice(0, string.length);
+      } else {
+        for (let i = 0; i < string.length - key.length; i++) {
+          key.push(key[i % key.length]);
+        }
+      }
+      return key.join("");
+    }
+
+    function cipherText(string, key) {
+      const testList = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"];
+      let cipherText = "";
+      for (let i = 0; i < string.length; i++) {
+        const x = (testList.indexOf(string[i]) + testList.indexOf(key[i])) % 52;
+        cipherText += testList[x];
+      }
+      return cipherText;
+    }
+
+    function codesTable(char) {
+      const table = {
+        "A": 11, "B": 21, "C": 31, "D": 41, "E": 51, "F": 61, "G": 71, "H": 81,
+        "I": 12, "J": 22, "K": 32, "L": 42, "M": 52, "N": 62, "O": 72, "P": 82,
+        "Q": 13, "R": 23, "S": 33, "T": 43, "U": 53, "V": 63, "W": 73, "X": 83,
+        "Y": 14, "Z": 24, "a": 34, "b": 44, "c": 54, "d": 64, "e": 74, "f": 84,
+        "g": 15, "h": 25, "i": 35, "j": 45, "k": 55, "l": 65, "m": 75, "n": 85,
+        "o": 16, "p": 26, "q": 36, "r": 46, "s": 56, "t": 66, "u": 76, "v": 86,
+        "w": 17, "x": 27, "y": 37, "z": 47,
+      };
+      return table[char];
+    }
+
+    function encoding(text) {
+      let finishedText = "";
+      for (let i = 0; i < text.length; i++) {
+        if (text[i].match(/[a-zA-Z]/)) {
+          finishedText += codesTable(text[i]) + " ";
+        }
+      }
+      return finishedText.trim();
+    }
+
+    function originalText(cipherText, key) {
+      const testList = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"];
+      let origText = "";
+      for (let i = 0; i < cipherText.length; i++) {
+        const x = (testList.indexOf(cipherText[i]) - testList.indexOf(key[i]) + 52) % 52;
+        origText += testList[x];
+      }
+      return origText;
+    }
+
+    function codesTable1(char) {
+      const table = {
+        11: "A", 21: "B", 31: "C", 41: "D", 51: "E", 61: "F", 71: "G", 81: "H",
+        12: "I", 22: "J", 32: "K", 42: "L", 52: "M", 62: "N", 72: "O", 82: "P",
+        13: "Q", 23: "R", 33: "S", 43: "T", 53: "U", 63: "V", 73: "W", 83: "X",
+        14: "Y", 24: "Z", 34: "a", 44: "b", 54: "c", 64: "d", 74: "e", 84: "f",
+        15: "g", 25: "h", 35: "i", 45: "j", 55: "k", 65: "l", 75: "m", 85: "n",
+        16: "o", 26: "p", 36: "q", 46: "r", 56: "s", 66: "t", 76: "u", 86: "v",
+        17: "w", 27: "x", 37: "y", 47: "z",
+      };
+      return table[char];
+    }
+
+    function decoding(text) {
+      [text, finished_text] = [text, ""];
+      text.split(' ').map(Number).forEach(function (symbol) {
+        finished_text += codesTable1(symbol);
+      });
+      return finished_text;
+    }
+
+    function convertDigitsToWords(sentence) {
+      const digitToWord = {
+        "0": "zo",
+        "1": "oe",
+        "2": "tw",
+        "3": "thr",
+        "4": "fr",
+        "5": "fe",
+        "6": "ix",
+        "7": "sev",
+        "8": "eht",
+        "9": "nin"
+      };
+      return sentence.replace(/\d/g, digit => digitToWord[digit] + " ");
+    }
+
+    function convertWordsToDigits(sentence) {
+      const wordToDigit = {
+        "zo": "0",
+        "oe": "1",
+        "tw": "2",
+        "thr": "3",
+        "fr": "4",
+        "fe": "5",
+        "ix": "6",
+        "sev": "7",
+        "eht": "8",
+        "nin": "9"
+      };
+      return sentence.replace(/\b\w+\b/g, word => wordToDigit[word] || word);
+    }
+
+    $(document).ready(function () {
+      $('form').submit(function (event) {
+        var message = $('#message').val();
+        let currentTime = new Date();
+        let year = currentTime.getFullYear();
+        let month = currentTime.getMonth() + 1;  // Month is zero-indexed
+        let day = currentTime.getDate();
+        let dateString = year + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
+        let hours = currentTime.getHours();
+        let minutes = currentTime.getMinutes();
+        let hoursString = (hours < 10 ? '0' : '') + hours;
+        let minutesString = (minutes < 10 ? '0' : '') + minutes;
+        let timeString = hoursString + ":" + minutesString;
+
+        const specialChars = ['@', '!', '^', '&', '/', '\\', '#', ',', '+', '(', ')', '$', '~', '%', '.', "'", '"', ':', '*', '?', '<', '>', '{', '}', '=', '-', '_', '[', ']', '~', '`', '|'];
+
+        // check if the message contains any special characters
+        if (new RegExp(`[${specialChars.join('\\')}]`).test(message)) {
+          // Remove special characters from the message
+          if (message.length == 1) {
+            // if message is a single character, remove it if it is a special character
+            message = "";
+            $('#message').val(message).focus();
+          } else {
+            // if message is a sentence, remove special characters
+            message = message.replace(new RegExp(`[${specialChars.join('\\')}]`, 'g'), "");
+          }
+          $('#message').val(message).focus();
+        }
+
+        if (message == "") {
+          $('#message').val('').focus();
+        }
+        else {
+          if (/\d/.test(message)) {
+            message = message.replace(/(\D)(\d)/g, '$1 $2');
+            message = convertDigitsToWords(message);
+            console.log('message:-' + message)
+            message = message.replace(/ /g, "qi");
+            const key = generateKey(message, keyword);
+            const vigenere_encoding = cipherText(message, key);
+            console.log("vigenere encoding :-" + vigenere_encoding);
+            const polybius_encoding = encoding(vigenere_encoding);
+            console.log("polybius encoding :-" + polybius_encoding);
+            socket.emit('message', { 'username': username, 'room': room, 'message': polybius_encoding, 'dateString': dateString, 'timeString': timeString, 'key': key });
+            $('#message').val('').focus();
+          } else {
+            console.log('message:-' + message)
+            message = message.replace(/ /g, "qi");
+            const key = generateKey(message, keyword);
+            const vigenere_encoding = cipherText(message, key);
+            console.log("vigenere encoding :-" + vigenere_encoding);
+            const polybius_encoding = encoding(vigenere_encoding);
+            console.log("polybius encoding :-" + polybius_encoding);
+            socket.emit('message', { 'username': username, 'room': room, 'message': polybius_encoding, 'dateString': dateString, 'timeString': timeString, 'key': key });
+            $('#message').val('').focus();
+          }
+        }
+        event.preventDefault();
+      });
+
+      $('#leave').click(function () {
+        socket.emit('leave', { 'username': username, 'room': room });
+        window.location.href = "{{ url_for('index') }}";
+      });
+      $('#send').click(function (){
+          var email = prompt("Please enter your Friend email id:");
+          socket.emit('send_mail', {'room': room,'email':email });
+      });
+    });
+
+
+    socket.on('message', function (data) {
+      console.log(`Broadcasting message from ${data.username}: ${data.message} ${data.timeString}`);
+      const polybius_decoding = decoding(data.message);
+      console.log("polybius decoding :-" + polybius_decoding);
+      let vigenere_decoding = originalText(polybius_decoding, data.key);
+      vigenere_decoding = vigenere_decoding.replace(/qi/g, " ");
+      if (/\b(zo|oe|tw|thr|fr|fe|ix|sev|eht|nin)\b/g.test(vigenere_decoding)) {
+        vigenere_decoding = convertWordsToDigits(vigenere_decoding);
+        vigenere_decoding = vigenere_decoding.replace(/\d\s(?=\d)/g, (match) => match.replace(/\s/g, ''));
+      }
+      else {
+        vigenere_decoding = vigenere_decoding
+      }
+      console.log("vigenere decoding :-" + vigenere_decoding);
+      $('#messages').append(
+        $('<p>').text(data.username + ': ' + vigenere_decoding).append($('<span style="font-size:10px">').html('&nbsp&nbsp&nbsp&nbsp;' + data.timeString))
+      );
+    });
+
+  </script>
+</head>
+
+<body class="bg-info">
+  <div id="alert-box">
+    <span class="closebtn" onclick="closeAlertBox();">&times;</span>
+    <strong>Notice:</strong> <br>
+    <li>This site take an input of 255 characters</li>
+  </div>
+  <div class="d-flex bd-highlight bg-white mb-2">
+    <div class="me-auto p-2 bd-highlight">
+      <h2 class="text-success ms-5">Let'sTalk</h2>
+    </div>
+    <div class="p-2 bd-highlight">
+      <button id="send" class="btn btn-outline-primary" type="button">send Mail</button>
+      <button id="leave" class="btn btn-outline-primary" type="button">Leave Room</button>
+    </div>
+  </div>
+  <div class="bg-dark w-50 mx-auto text-light text-center border border-dark border-2">
+    <h1 id="userhead" class="p-2"></h1>
+  </div>
+  <div class="d-flex flex-column w-100 mx-auto mt-2">
+    <div class="p-2 border border-dark rounded border-3 mx-auto overflow-auto w-50 bg-light" style="height:65vh;">
+      <div id="connection"></div>
+      <div id="messages"></div>
+    </div>
+    <form class="d-flex flex-row mb-3 mt-3 mx-auto w-50">
+      <input id="message" type="text" maxlength="255" class="w-100 border border-dark rounded border-2" required>
+      <button class="ms-3 btn btn-success fw-bold text-light border border-dark border-2">Send</button>
+    </form>
+  </div>
+</body>
+
+</html>

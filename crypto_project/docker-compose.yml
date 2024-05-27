@@ -1,0 +1,45 @@
+version: "3.9"
+services:
+
+# database service
+  db:
+    image: mysql:latest
+    restart: always
+    container_name: mydb_container
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: chat_db
+      MYSQL_ROOT_USER: root
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    networks:
+      - backend
+
+
+# backend  flask service
+  flask-service:
+    container_name: flask-service-container
+    build: .
+    ports:
+      - "80:5000"
+    environment:
+      SERVICE_PORT: 5000
+      DB_PORT: 3306
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: chat_db
+    depends_on:
+      - db
+    networks:
+      - backend
+    restart: always
+
+
+networks:
+  backend:
+
+volumes:
+ mysql_data:

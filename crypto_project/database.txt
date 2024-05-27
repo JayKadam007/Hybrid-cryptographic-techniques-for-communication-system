@@ -1,0 +1,25 @@
+CREATE DATABASE chat_db;
+
+USE chat_db;
+
+CREATE TABLE records (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(255),
+  room VARCHAR(255),
+  message TEXT,
+  dateString DATE,
+  timeString TIME,
+  message_key VARCHAR(255)
+);
+
++-------------+--------------+------+-----+---------+----------------+
+| Field       | Type         | Null | Key | Default | Extra          |
++-------------+--------------+------+-----+---------+----------------+
+| id          | int          | NO   | PRI | NULL    | auto_increment |
+| username    | varchar(255) | YES  |     | NULL    |                |
+| room        | varchar(255) | YES  |     | NULL    |                |
+| message     | text         | YES  |     | NULL    |                |
+| dateString  | date         | YES  |     | NULL    |                |
+| timeString  | time         | YES  |     | NULL    |                |
+| message_key | varchar(255) | YES  |     | NULL    |                |
++-------------+--------------+------+-----+---------+----------------+
